@@ -1,10 +1,37 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch, computed } from "vue";
 import { uid } from "uid";
 import TodoCreator from "../components/TodoCreator.vue";
 import TodoItem from "../components/TodoItem.vue";
 import { Icon } from "@iconify/vue";
 const todoList = ref([]);
+
+watch(
+  todoList,
+  (newValue, oldValue) => {
+    setTodoListLocalStorage();
+  },
+  {
+    deep: true,
+  }
+);
+const todoCompleted = computed(() => {
+  // every loops thru array and check if every is completed in array is true
+  return todoList.value.every((todo) => todo.isCompleted);
+});
+const setTodoListLocalStorage = () => {
+  localStorage.setItem("todoList", JSON.stringify(todoList.value));
+};
+
+const fetchTodoListLocalStorage = () => {
+  const savedTodoList = JSON.parse(localStorage.getItem("todoList"));
+  if (savedTodoList != null) {
+    todoList.value = savedTodoList;
+  }
+};
+
+fetchTodoListLocalStorage();
+
 const createTodo = (todo) => {
   todoList.value.push({
     id: uid(),
@@ -22,6 +49,7 @@ const toggleTodoComplete = (index) => {
   } else {
     todoList.value[index].isCompleted = false;
   }
+  // todoCompleted();
   // todoList.value[index].isCompleted = !todoList.value[index].isCompleted;
 };
 const toggleEditTodo = (index) => {
@@ -33,6 +61,7 @@ const toggleEditTodo = (index) => {
   } else {
     todoList.value[index].isEditing = false;
   }
+
   // todoList.value[index].isEditing = !todoList.value[index].isEditing;
 };
 const updateTodo = (todoVal, index) => {
@@ -64,6 +93,11 @@ const deleteTodo = (todoId) => {
       <p class="todo-msg" v-else>
         <Icon icon="ph:smiley-sad" color="#1b7ec0" width="22" />
         <span>You have no todos to complete! Add one in!</span>
+      </p>
+      <p v-if="todoCompleted && todoList.length > 0" class="todo-msg">
+        <Icon icon="ph:smiley" color="#1b7ec0" width="22" />
+
+        <span>You have completed all of your todo!</span>
       </p>
     </main>
   </div>
